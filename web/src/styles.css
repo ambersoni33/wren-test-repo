@@ -1,0 +1,142 @@
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: #f4f6f8;
+}
+
+.stage {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f6f8;
+}
+
+.phone {
+  height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .phone {
+    height: 844px;
+    width: 390px;
+    border-radius: 44px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.wren-root,
+.wren-root * {
+  box-sizing: content-box;
+}
+.wren-root {
+  font-family: "Figtree", system-ui, sans-serif;
+}
+.wren-root button,
+.wren-root input {
+  font-family: "Figtree", system-ui, sans-serif;
+}
+.wren-root input::placeholder {
+  color: #767676;
+}
+.v3-scroll {
+  scrollbar-width: none;
+}
+.v3-scroll::-webkit-scrollbar {
+  display: none;
+}
+.v3-press {
+  transition: transform 0.15s ease;
+}
+.v3-press:active {
+  transform: scale(0.98);
+}
+@keyframes v3Glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.v3-glow {
+  animation: v3Glow 2.4s ease-in-out infinite;
+}
+@keyframes v3In {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.v3-in {
+  animation: v3In 0.3s ease-out both;
+}
+@keyframes v3Drop {
+  from {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.v3-drop {
+  animation: v3Drop 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes v3Pop {
+  0% {
+    transform: scale(0.5);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.v3-pop {
+  animation: v3Pop 0.28s ease-out both;
+}
+@keyframes v3Dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+.v3-d1 {
+  animation: v3Dot 1.2s infinite;
+}
+.v3-d2 {
+  animation: v3Dot 1.2s 0.2s infinite;
+}
+.v3-d3 {
+  animation: v3Dot 1.2s 0.4s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .v3-glow,
+  .v3-in,
+  .v3-drop,
+  .v3-pop,
+  .v3-d1,
+  .v3-d2,
+  .v3-d3 {
+    animation: none;
+  }
+}

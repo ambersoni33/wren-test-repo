@@ -1,0 +1,9 @@
+fastapi==0.136.1
+uvicorn==0.46.0
+python-multipart==0.0.20
+pymongo>=4.6.0
+python-dotenv>=1.0.0
+openai>=1.0.0
+websockets>=12.0
+psycopg[binary]>=3.2.0
+pgvector>=0.3.6

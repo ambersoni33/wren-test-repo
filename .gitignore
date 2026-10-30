@@ -1,0 +1,21 @@
+# Python
+.env
+backend/.env
+backend/.venv/
+backend/data/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Node / Expo
+mobile/node_modules/
+web/node_modules/
+web/dist/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+*.log
+.DS_Store
+
+_loveable_ui/
+_loveable_ui2/

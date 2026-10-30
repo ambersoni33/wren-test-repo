@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fieldnote — Live Audio Chunk & Whisper Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0b0f19;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 680px;
+      background: #131b2e;
+      border: 1px solid #1e293b;
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #1e293b;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .badge.offline {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    .badge.warn {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+    .config-card {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .config-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .config-input {
+      flex: 1;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #f8fafc;
+      outline: none;
+      font-family: monospace;
+    }
+    .config-input:focus {
+      border-color: #38bdf8;
+    }
+    .btn-save {
+      background: #38bdf8;
+      color: #0f172a;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .btn-save:hover {
+      background: #7dd3fc;
+    }
+    .meter-box {
+      width: 100%;
+      height: 48px;
+      background: #0f172a;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      padding: 4px 8px;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+    .bar {
+      flex: 1;
+      height: 10%;
+      background: #334155;
+      border-radius: 2px;
+      transition: height 0.08s ease, background-color 0.08s ease;
+    }
+    .bar.active {
+      background: #38bdf8;
+    }
+    .timer {
+      font-size: 40px;
+      font-weight: 300;
+      text-align: center;
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+      font-variant-numeric: tabular-nums;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-record {
+      background: #ef4444;
+      color: white;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+    }
+    .btn-record.recording {
+      background: #f59e0b;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+    }
+    .btn-stop {
+      background: #334155;
+      color: #94a3b8;
+    }
+    .btn-stop:enabled {
+      color: white;
+      background: #475569;
+    }
+    .card {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .transcript-box {
+      min-height: 80px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #f1f5f9;
+      white-space: pre-wrap;
+    }
+    .log-list {
+      max-height: 120px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .log-item {
+      padding: 3px 0;
+      border-bottom: 1px solid #1e293b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎙️ Fieldnote Audio & AI Tester</h1>
+      <div class="header-badges">
+        <span id="mongoBadge" class="badge">Checking MongoDB...</span>
+        <span id="aiBadge" class="badge warn">Checking Whisper AI...</span>
+      </div>
+    </header>
+
+    <div class="config-card">
+      <div class="card-title" style="margin-bottom: 4px;">
+        <span>OpenAI API Key (Whisper Model)</span>
+        <span id="keyStatusText" style="font-size: 11px; text-transform: none; color: #94a3b8;">Checking...</span>
+      </div>
+      <div class="config-row">
+        <input type="password" id="apiKeyInput" class="config-input" placeholder="Paste your sk-... key here if needed" />
+        <button id="saveKeyBtn" class="btn-save">Save & Activate</button>
+      </div>
+    </div>
+
+    <div class="timer" id="timerDisplay">00:00.0</div>
+
+    <div class="meter-box" id="meterBox">
+      <!-- 32 bars generated dynamically -->
+    </div>
+
+    <div class="controls">
+      <button id="recordBtn" class="btn-record">Start Recording & Chunking</button>
+      <button id="stopBtn" class="btn-stop" disabled>Stop Recording</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>Live Streaming Transcript (Whisper AI)</span>
+        <span id="chunkIndicator" style="color: #38bdf8; font-weight: normal;">Ready</span>
+      </div>
+      <div class="transcript-box" id="transcriptDisplay">Click "Start Recording" and keep talking. The microphone stays on until you press Stop. Each stretch is transcribed and added underneath the last one.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>Summary points</span>
+        <span id="summaryModel" style="color: #38bdf8; font-weight: normal;">gpt-5.6-luna</span>
+      </div>
+      <div class="transcript-box" id="summaryDisplay">Summary points appear here after you press Stop.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Chunk & MongoDB Audit Log</div>
+      <div class="log-list" id="logList">
+        <div class="log-item">System ready. Testing without Android Studio directly in browser.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let mediaRecorder = null;
+    let mediaStream = null;
+    let audioContext = null;
+    let analyser = null;
+    let timerInterval = null;
+    let sliceTimer = null;
+    let startTime = 0;
+    let sessionId = 'web_' + Math.random().toString(36).substring(2, 10);
+    let chunkIndex = 0;
+    let isRecording = false;
+    let uploadChain = Promise.resolve();
+
+    // Generate 32 bars
+    const meterBox = document.getElementById('meterBox');
+    const bars = [];
+    for (let i = 0; i < 32; i++) {
+      const b = document.createElement('div');
+      b.className = 'bar';
+      meterBox.appendChild(b);
+      bars.push(b);
+    }
+
+    const recordBtn = document.getElementById('recordBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const transcriptDisplay = document.getElementById('transcriptDisplay');
+    const summaryDisplay = document.getElementById('summaryDisplay');
+    const summaryModel = document.getElementById('summaryModel');
+    const chunkIndicator = document.getElementById('chunkIndicator');
+    const logList = document.getElementById('logList');
+    const mongoBadge = document.getElementById('mongoBadge');
+    const aiBadge = document.getElementById('aiBadge');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const saveKeyBtn = document.getElementById('saveKeyBtn');
+    const keyStatusText = document.getElementById('keyStatusText');
+
+    function log(msg) {
+      const el = document.createElement('div');
+      el.className = 'log-item';
+      el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      logList.prepend(el);
+    }
+
+    // Refresh configuration status (Mongo + AI Whisper)
+    async function refreshStatus() {
+      try {
+        const res = await fetch('/api/config/status');
+        if (!res.ok) throw new Error('Status error');
+        const d = await res.json();
+        
+        // Mongo
+        if (d.mongo_connected) {
+          mongoBadge.textContent = 'MongoDB: Connected';
+          mongoBadge.className = 'badge';
+        } else {
+          mongoBadge.textContent = 'MongoDB Offline (Local Fallback)';
+          mongoBadge.className = 'badge offline';
+        }
+
+        // AI Whisper
+        if (d.has_openai_key || d.has_groq_key) {
+          aiBadge.textContent = d.has_openai_key ? 'Whisper AI: Active (OpenAI)' : 'Whisper AI: Active (Groq)';
+          aiBadge.className = 'badge';
+          keyStatusText.textContent = 'Active in backend/.env';
+          keyStatusText.style.color = '#10b981';
+          apiKeyInput.placeholder = 'Key is configured (enter new one to overwrite)';
+        } else {
+          aiBadge.textContent = 'Whisper AI: Key Needed';
+          aiBadge.className = 'badge warn';
+          keyStatusText.textContent = 'Missing in backend/.env';
+          keyStatusText.style.color = '#f59e0b';
+        }
+      } catch (e) {
+        mongoBadge.textContent = 'Backend Offline';
+        mongoBadge.className = 'badge offline';
+        aiBadge.textContent = 'Backend Offline';
+        aiBadge.className = 'badge offline';
+      }
+    }
+
+    refreshStatus();
+
+    // Save API Key button
+    saveKeyBtn.addEventListener('click', async () => {
+      const key = apiKeyInput.value.trim();
+      if (!key) {
+        alert('Please paste a valid OpenAI API Key (starting with sk-)');
+        return;
+      }
+      saveKeyBtn.disabled = true;
+      saveKeyBtn.textContent = 'Saving...';
+      try {
+        const res = await fetch('/api/config/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ openai_api_key: key }),
+        });
+        if (res.ok) {
+          log('OpenAI API Key saved to backend/.env and activated!');
+          apiKeyInput.value = '';
+          await refreshStatus();
+        } else {
+          const err = await res.json();
+          alert('Failed to save key: ' + (err.detail || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Could not connect to backend: ' + err.message);
+      } finally {
+        saveKeyBtn.disabled = false;
+        saveKeyBtn.textContent = 'Save & Activate';
+      }
+    });
+
+    recordBtn.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContext.createMediaStreamSource(stream);
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 64;
+        source.connect(analyser);
+
+        sessionId = 'web_' + Date.now();
+        chunkIndex = 0;
+        uploadChain = Promise.resolve();
+        isRecording = true;
+        mediaStream = stream;
+        transcriptDisplay.textContent = 'Listening… keep talking. New sentences will be added here.';
+        summaryDisplay.textContent = 'Summary points appear here after you press Stop.';
+        recordBtn.textContent = 'Listening...';
+        recordBtn.className = 'btn-record recording';
+        recordBtn.disabled = true;
+        stopBtn.disabled = false;
+
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 100);
+        updateMeter();
+        startSlice();
+        log(`Started recording session: ${sessionId}`);
+      } catch (err) {
+        alert('Could not access microphone: ' + err.message);
+      }
+    });
+
+    function recorderMime() {
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) return 'audio/webm;codecs=opus';
+      if (MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
+      return '';
+    }
+
+    // Stop and start a new recorder for each stretch. A timeslice from one
+    // long recorder is not a valid audio file after the first piece, so
+    // Whisper was keeping only the opening sentence.
+    function startSlice() {
+      if (!isRecording || !mediaStream) return;
+      const mime = recorderMime();
+      const rec = mime ? new MediaRecorder(mediaStream, { mimeType: mime }) : new MediaRecorder(mediaStream);
+      mediaRecorder = rec;
+      const parts = [];
+      rec.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) parts.push(event.data);
+      };
+      rec.onstop = () => {
+        const blob = new Blob(parts, { type: rec.mimeType || 'audio/webm' });
+        const last = !isRecording;
+        if (!last) {
+          startSlice();
+        } else if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+          if (audioContext) audioContext.close();
+        }
+        if (blob.size > 200) enqueueChunk(blob, last);
+      };
+      rec.start();
+      sliceTimer = setTimeout(() => {
+        if (rec.state === 'recording') rec.stop();
+      }, 5000);
+    }
+
+    stopBtn.addEventListener('click', async () => {
+      if (!isRecording) return;
+      isRecording = false;
+      clearInterval(timerInterval);
+      clearTimeout(sliceTimer);
+
+      recordBtn.textContent = 'Start Recording & Chunking';
+      recordBtn.className = 'btn-record';
+      recordBtn.disabled = false;
+      stopBtn.disabled = true;
+
+      if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+      log(`Stopped session: ${sessionId}. Finishing the last stretch.`);
+    });
+
+    function enqueueChunk(blob, isLast) {
+      const idx = chunkIndex++;
+      uploadChain = uploadChain.then(() => sendChunk(blob, idx, isLast));
+    }
+
+    async function sendChunk(blob, idx, isLast) {
+      chunkIndicator.textContent = isLast
+        ? 'Writing summary points...'
+        : `Transcribing stretch #${idx + 1}...`;
+      const formData = new FormData();
+      formData.append('session_id', sessionId);
+      formData.append('chunk_index', idx);
+      formData.append('is_last', isLast ? 'true' : 'false');
+      formData.append('file', blob, `chunk_${idx}.webm`);
+
+      try {
+        const res = await fetch('/api/transcribe/chunk', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) {
+          let detail = res.statusText;
+          try {
+            const err = await res.json();
+            detail = err.detail || detail;
+          } catch (parseError) {
+            detail = await res.text();
+          }
+          log(`Stretch #${idx + 1} failed: ${detail}`);
+          chunkIndicator.textContent = isRecording ? 'Still listening' : 'Check the log';
+          return;
+        }
+
+        const data = await res.json();
+        log(`Chunk #${idx + 1} transcribed (${data.engine}) -> MongoDB saved`);
+        chunkIndicator.textContent = `Chunk #${idx + 1} saved`;
+        if (data.full_transcript) {
+          transcriptDisplay.textContent = data.full_transcript;
+        }
+        if (data.summary) {
+          summaryDisplay.textContent = data.summary;
+          summaryModel.textContent = data.summary_model || 'gpt-5.6-luna';
+          log('Summary points saved to MongoDB');
+        } else if (data.summary_error) {
+          summaryDisplay.textContent = data.summary_error;
+          log(`Summary failed: ${data.summary_error}`);
+        }
+      } catch (err) {
+        log(`Failed chunk #${idx + 1}: ${err.message}`);
+      }
+    }
+
+    function updateTimer() {
+      const elapsed = Date.now() - startTime;
+      const totalSec = Math.floor(elapsed / 1000);
+      const min = Math.floor(totalSec / 60);
+      const sec = totalSec % 60;
+      const tenths = Math.floor((elapsed % 1000) / 100);
+      timerDisplay.textContent = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}.${tenths}`;
+    }
+
+    function updateMeter() {
+      if (!isRecording || !analyser) return;
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(dataArray);
+
+      bars.forEach((bar, i) => {
+        const val = dataArray[i] || 0;
+        const pct = Math.max(8, Math.min(100, Math.round((val / 255) * 100)));
+        bar.style.height = `${pct}%`;
+        if (pct > 25) {
+          bar.classList.add('active');
+        } else {
+          bar.classList.remove('active');
+        }
+      });
+
+      requestAnimationFrame(updateMeter);
+    }
+  </script>
+</body>
+</html>
